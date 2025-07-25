@@ -273,8 +273,43 @@ export default function VaultCreateFeature() {
   }
 
   return (
-    <div className="container max-w-5xl py-10">
-      <h1 className="text-3xl font-bold color-primary mb-6">Create New Vault</h1>
+    <div className="container max-w-6xl py-10">
+      {/* Header Section with Explanation */}
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold mb-4">Create New Automation</h1>
+        <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+          Set up an automated DCA strategy that will purchase tokens at scheduled intervals 
+          and immediately deploy them into yield-bearing protocols.
+        </p>
+        
+        {/* What Happens When You Create an Automation */}
+        <div className="bg-muted/30 border border-border rounded-lg p-6 mb-8 max-w-4xl mx-auto">
+          <h3 className="font-semibold mb-4 text-lg">What happens when you create this automation?</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="text-center p-4 bg-background rounded-lg">
+              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-primary font-semibold">1</span>
+              </div>
+              <h4 className="font-medium mb-1">Smart Contract Setup</h4>
+              <p className="text-muted-foreground">Your automation strategy is deployed as a trustless smart contract on Solana</p>
+            </div>
+            <div className="text-center p-4 bg-background rounded-lg">
+              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-primary font-semibold">2</span>
+              </div>
+              <h4 className="font-medium mb-1">Automated Execution</h4>
+              <p className="text-muted-foreground">The contract automatically executes your DCA strategy at the specified intervals</p>
+            </div>
+            <div className="text-center p-4 bg-background rounded-lg">
+              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-primary font-semibold">3</span>
+              </div>
+              <h4 className="font-medium mb-1">Instant Yield</h4>
+              <p className="text-muted-foreground">Each purchase immediately starts earning yield in your chosen protocol</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Show error message if mutation failed */}
       {createVaultMutation.isError && (
@@ -283,12 +318,13 @@ export default function VaultCreateFeature() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card>
           <CardHeader>
-            <CardTitle>Vault Details</CardTitle>
+            <CardTitle>Automation Configuration</CardTitle>
             <CardDescription>
-              Configure your new vault by selecting a source token, amount, target, and duration.
+              Configure your automated DCA strategy by selecting your source token, investment amount, 
+              target yield protocol, and execution schedule.
             </CardDescription>
           </CardHeader>
 
@@ -302,6 +338,10 @@ export default function VaultCreateFeature() {
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Source Token</FormLabel>
+                      <FormDescription className="mb-2">
+                        Choose the token you want to use for your DCA strategy. This will be the token 
+                        you invest with at each interval.
+                      </FormDescription>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -356,11 +396,14 @@ export default function VaultCreateFeature() {
                   name="sourceAmount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Source Amount</FormLabel>
+                      <FormLabel>Investment Amount</FormLabel>
                       <FormControl>
                         <Input type="number" placeholder="Enter amount" {...field} />
                       </FormControl>
-                      <FormDescription>Enter the amount of tokens you want to deposit.</FormDescription>
+                      <FormDescription>
+                        The amount of tokens to invest at each execution interval. This will be split 
+                        across the number of executions you specify.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -371,92 +414,123 @@ export default function VaultCreateFeature() {
                   control={form.control}
                   name="target"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Target</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select target" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {targetOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              <TargetOption option={option} />
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>Select where you want to allocate your tokens.</FormDescription>
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Target Yield Protocol</FormLabel>
+                      <FormDescription className="mb-2">
+                        Choose the yield-bearing protocol where your investments will be deployed. 
+                        Each protocol offers different APY rates and risk profiles.
+                      </FormDescription>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn("w-full justify-between", !field.value && "text-muted-foreground")}
+                            >
+                              {field.value
+                                ? targetOptions.find((option) => option.value === field.value)?.symbol
+                                : "Select target protocol"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0">
+                          <Command>
+                            <CommandInput placeholder="Search protocol..." />
+                            <CommandList>
+                              <CommandEmpty>No protocol found.</CommandEmpty>
+                              <CommandGroup>
+                                {targetOptions.map((option) => (
+                                  <CommandItem
+                                    key={option.value}
+                                    value={option.value}
+                                    onSelect={() => {
+                                      form.setValue("target", option.value)
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        option.value === field.value ? "opacity-100" : "opacity-0",
+                                      )}
+                                    />
+                                    <TargetOption option={option} />
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                {/* Duration and Executions */}
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="durationValue"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Duration</FormLabel>
-                          <FormControl>
-                            <Input type="number" placeholder="Enter duration" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="durationUnit"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Unit</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select unit" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Hours">Hours</SelectItem>
-                              <SelectItem value="Days">Days</SelectItem>
-                              <SelectItem value="Weeks">Weeks</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                {/* Duration */}
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="durationValue"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Duration</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="Enter duration" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
                   <FormField
                     control={form.control}
-                    name="executions"
+                    name="durationUnit"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Number of Executions</FormLabel>
-                        <FormControl>
-                          <Input type="number" placeholder="Enter number of executions" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Split your investment into multiple executions over the duration period.
-                        </FormDescription>
+                        <FormLabel>Unit</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select unit" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Hours">Hours</SelectItem>
+                            <SelectItem value="Days">Days</SelectItem>
+                            <SelectItem value="Weeks">Weeks</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
 
+                <FormField
+                  control={form.control}
+                  name="executions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Number of Executions</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="Enter number of executions" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Split your total investment into multiple executions over the duration period. 
+                        For example, 4 executions over 7 days means one execution every 1.75 days.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <Button 
                   type="submit" 
                   className="w-full hover:bg-accent/90 hover:cursor-pointer bg-accent text-accent-foreground"
                 >
-                  Draft Vault
+                  Preview Automation
                 </Button>
               </form>
             </Form>
@@ -464,7 +538,7 @@ export default function VaultCreateFeature() {
         </Card>
 
         <div className="flex flex-col">
-          <h2 className="text-xl font-semibold mb-4">Vault Preview</h2>
+          <h2 className="text-xl font-semibold mb-4">Automation Preview</h2>
 
           {previewData ? (
             <>
@@ -477,14 +551,25 @@ export default function VaultCreateFeature() {
               {createVaultMutation.isPending && (
                 <div className="mt-4 flex items-center justify-center text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Creating vault...
+                  Creating automation...
                 </div>
               )}
+
+              {/* Additional Info */}
+              <div className="mt-6 p-4 bg-muted/30 rounded-lg">
+                <h4 className="font-medium mb-2">What happens next?</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• Your automation will be deployed as a smart contract</li>
+                  <li>• The first execution will occur after the specified duration</li>
+                  <li>• You can monitor progress and modify settings anytime</li>
+                  <li>• Yield earnings will be tracked in real-time</li>
+                </ul>
+              </div>
             </>
           ) : (
-            <div className="flex items-center justify-center h-full min-h-[300px] border-2 border-dashed rounded-lg p-6 text-center text-muted-foreground">
+            <div className="flex items-center justify-center h-full min-h-[400px] border-2 border-dashed rounded-lg p-6 text-center text-muted-foreground">
               <div>
-                <p className="mb-2">Fill out the form to see a preview of your vault</p>
+                <p className="mb-2">Fill out the form to see a preview of your automation</p>
                 <ArrowRight className="h-6 w-6 mx-auto" />
               </div>
             </div>
